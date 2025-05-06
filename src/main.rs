@@ -5,6 +5,11 @@ const HIGHLIGHT_PAIR: i16 = 1;
 
 fn main() {
     initscr();
+    noecho();
+
+    // Sett markøren til usynlig
+    curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
+
     start_color();
     init_pair(REGULAR_PAIR, COLOR_WHITE, COLOR_BLACK);
     init_pair(HIGHLIGHT_PAIR, COLOR_BLACK, COLOR_WHITE);
@@ -16,6 +21,7 @@ fn main() {
         "Fullfør det du begynte med",
     ];
 
+    let done = Vec::<String>::new();
     let mut todo_curr: usize = 1;
 
     while !quit {
