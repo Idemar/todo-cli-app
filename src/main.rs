@@ -1,5 +1,3 @@
-use std::ops::Index;
-
 use ncurses::*;
 
 const REGULAR_PAIR: i16 = 0;
@@ -10,42 +8,47 @@ type Id = usize;
 #[derive(Default)]
 struct Ui {
     list_curr: Option<Id>,
+    row: usize,
+    col: usize,
 }
 
 impl Ui {
-    fn start(&mut self) {
-        todo!();
+    fn start(&mut self, row: usize, col: usize) {
+        self.row = row;
+        self.col = col;
     }
     
     fn start_liste(&mut self, id: Id) {
+        assert!(self.list_curr.is_none(), "nestede lister er ikke tillatt");
+        self.list_curr = Some(id);
         todo!();
     }
 
     fn liste_elementer(&mut self, label: &str, id: Id) {
-        // let pair = {
-        //     if todo_curr == index {
-        //         HIGHLIGHT_PAIR
-        //     } else {
-        //         REGULAR_PAIR
-        //     }
-        // };
-        // attron(COLOR_PAIR(pair));
-        // mv(index as i32, 1);
-        // addstr(*todo);
-        // attroff(COLOR_PAIR(pair));
-        todo!();
+        let id_curr = self.list_curr.expect("Ikke lov å lager list elemnet utenfor list");
+
+        self.label(label, {
+            if id_curr == id {
+                HIGHLIGHT_PAIR
+            } else {
+                REGULAR_PAIR
+            }
+        });
     }
 
-    fn label(&mut self, label: &str) {
-        todo!();
+    fn label(&mut self, label: &str, pair: i16) {
+        mv(self.row as i32, self.col as i32);
+        attron(COLOR_PAIR(pair));
+        attstr(text);
+        attroff(COLOR_PAIR(pair));
+        self.row += 1;
     }
 
     fn slutt_liste(&mut self) {
-        todo!();
+        self.list_curr = None;
     }
 
-    fn slutt(&mut self) {
-        todo!();
+    fn slutt(&mut self) { 
     }
 }
 fn main() {
@@ -67,13 +70,13 @@ fn main() {
     ];
 
     let dones = Vec::<String>::new();
-    let mut done_curr: usize = 0;
+    let done_curr: usize = 0;
     let mut todo_curr: usize = 0;
 
     let mut ui = Ui::default();
 
     while !quit {
-        ui.start();
+        ui.start(0, 0);
         {
             ui.start_liste(todo_curr);
 
@@ -82,15 +85,16 @@ fn main() {
             }
             ui.slutt_liste();
 
-            ui.label("---------------------------------------------------");
+            // ui.label("---------------------------------------------------", REGULAR_PAIR);
 
-            ui.start_liste(done_curr);
-            for (Index, done) in dones.iter().enumerate() {
-                ui.liste_elementer(&done, Index);
-            }
-            ui.slutt_liste();
-            ui.slutt();
+            // ui.start_liste(done_curr);
+            // for (Index, done) in dones.iter().enumerate() {
+            //     ui.liste_elementer(&done, Index);
+            // }
+            // ui.slutt_liste();
+            // ui.slutt();
         }
+        ui.slutt();
 
         refresh();
 
