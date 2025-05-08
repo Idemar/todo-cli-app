@@ -23,7 +23,7 @@ impl Ui {
         self.list_curr = Some(id);
     }
 
-    fn liste_elementer(&mut self, label: &str, id: Id) {
+    fn liste_elementer(&mut self, label: &str, id: Id) -> bool {
         let id_curr = self.list_curr.expect("Ikke lov å lager list elemnet utenfor list");
 
         self.label(label, {
@@ -33,6 +33,7 @@ impl Ui {
                 REGULAR_PAIR
             }
         });
+        return false;
     }
 
     fn label(&mut self, text: &str, pair: i16) {
@@ -50,6 +51,11 @@ impl Ui {
     fn slutt(&mut self) { 
     }
 }
+
+enum Fokus {
+    Todo,
+    Ferdig,
+}
 fn main() {
     initscr();
     noecho();
@@ -62,13 +68,13 @@ fn main() {
     init_pair(HIGHLIGHT_PAIR, COLOR_BLACK, COLOR_WHITE);
 
     let mut quit = false;
-    let todos: Vec<String> = vec![
+    let mut todos: Vec<String> = vec![
         "Lag todo app".to_string(),
         "Drikk en kopp kaffe".to_string(),
         "Fullfør det du begynte med".to_string(),
     ];
 
-    let dones = vec![
+    let mut dones = vec![
         "Stå opp".to_string(),
         "Spis frokost".to_string(),
     ];
@@ -79,6 +85,8 @@ fn main() {
     let mut ui = Ui::default();
 
     while !quit {
+        erase();
+
         ui.start(0, 0);
         {
             ui.label("TODO:", REGULAR_PAIR);
@@ -110,12 +118,17 @@ fn main() {
             'q' => quit = true,
             // w flytter opp i lista
             'w' => if todo_curr > 0 {
-                todo_curr -=1;
+                todo_curr -= 1;
             },
             // s flytter ned i lista
-            's' => if todo_curr < todos.len() - 1 {
+            's' => if todo_curr + 1 < todos.len() {
                 todo_curr += 1;
-            },
+            }
+            '\n' => {
+                if (todo_curr < todos.len()) {
+                    dones.push(todos.remove(todo_curr));
+                }
+            }
             _ => {}
         }
     }
