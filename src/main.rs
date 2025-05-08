@@ -21,7 +21,6 @@ impl Ui {
     fn start_liste(&mut self, id: Id) {
         assert!(self.list_curr.is_none(), "nestede lister er ikke tillatt");
         self.list_curr = Some(id);
-        todo!();
     }
 
     fn liste_elementer(&mut self, label: &str, id: Id) {
@@ -36,10 +35,10 @@ impl Ui {
         });
     }
 
-    fn label(&mut self, label: &str, pair: i16) {
+    fn label(&mut self, text: &str, pair: i16) {
         mv(self.row as i32, self.col as i32);
         attron(COLOR_PAIR(pair));
-        attstr(text);
+        addstr(text);
         attroff(COLOR_PAIR(pair));
         self.row += 1;
     }
@@ -69,7 +68,11 @@ fn main() {
         "Fullfør det du begynte med".to_string(),
     ];
 
-    let dones = Vec::<String>::new();
+    let dones = vec![
+        "Stå opp".to_string(),
+        "Spis frokost".to_string(),
+    ];
+
     let done_curr: usize = 0;
     let mut todo_curr: usize = 0;
 
@@ -78,21 +81,23 @@ fn main() {
     while !quit {
         ui.start(0, 0);
         {
+            ui.label("TODO:", REGULAR_PAIR);
             ui.start_liste(todo_curr);
 
             for (index, todo) in todos.iter().enumerate() {
-                ui.liste_elementer(todo, index);
+                ui.liste_elementer(&format!("- [ ] {}",todo), index);
             }
             ui.slutt_liste();
 
-            // ui.label("---------------------------------------------------", REGULAR_PAIR);
+            ui.label("---------------------------------------------------", REGULAR_PAIR);
 
-            // ui.start_liste(done_curr);
-            // for (Index, done) in dones.iter().enumerate() {
-            //     ui.liste_elementer(&done, Index);
-            // }
-            // ui.slutt_liste();
-            // ui.slutt();
+            ui.label("FERDIG:", REGULAR_PAIR);
+            ui.start_liste(0);
+            for (index, done) in dones.iter().enumerate() {
+                ui.liste_elementer(&format!("- [x] {}",done), index + 1);
+            }
+            ui.slutt_liste();
+            ui.slutt();
         }
         ui.slutt();
 
