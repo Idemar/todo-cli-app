@@ -56,6 +56,15 @@ enum Fokus {
     Todo,
     Ferdig,
 }
+
+impl Fokus {
+    fn bytt(&self) -> Self {
+        match self {
+            Fokus::Todo => Fokus::Ferdig,
+            Fokus::Ferdig => Fokus::Todo,
+        }
+    }
+}
 fn main() {
     initscr();
     noecho();
@@ -81,6 +90,7 @@ fn main() {
 
     let done_curr: usize = 0;
     let mut todo_curr: usize = 0;
+    let mut fokus = Fokus::Todo;
 
     let mut ui = Ui::default();
 
@@ -89,23 +99,25 @@ fn main() {
 
         ui.start(0, 0);
         {
-            ui.label("TODO:", REGULAR_PAIR);
-            ui.start_liste(todo_curr);
+            match fokus {
+                Fokus::Todo => {
+                    ui.label("TODO:", REGULAR_PAIR);
+                    ui.start_liste(todo_curr);
 
-            for (index, todo) in todos.iter().enumerate() {
-                ui.liste_elementer(&format!("- [ ] {}",todo), index);
+                    for (index, todo) in todos.iter().enumerate() {
+                    ui.liste_elementer(&format!("- [ ] {}",todo), index);
+                    }
+                    ui.slutt_liste();
+                },
+                Fokus::Ferdig => {
+                    ui.label("FERDIG:", REGULAR_PAIR);
+                    ui.start_liste(done_curr);
+                    for (index, done) in dones.iter().enumerate() {
+                     ui.liste_elementer(&format!("- [x] {}",done), index);
+                    }
+                    ui.slutt_liste();
+                }
             }
-            ui.slutt_liste();
-
-            ui.label("---------------------------------------------------", REGULAR_PAIR);
-
-            ui.label("FERDIG:", REGULAR_PAIR);
-            ui.start_liste(0);
-            for (index, done) in dones.iter().enumerate() {
-                ui.liste_elementer(&format!("- [x] {}",done), index + 1);
-            }
-            ui.slutt_liste();
-            ui.slutt();
         }
         ui.slutt();
 
@@ -125,9 +137,12 @@ fn main() {
                 todo_curr += 1;
             }
             '\n' => {
-                if (todo_curr < todos.len()) {
+                if todo_curr < todos.len() {
                     dones.push(todos.remove(todo_curr));
                 }
+            }
+            '\t' => {
+                fokus = fokus.bytt();
             }
             _ => {}
         }
