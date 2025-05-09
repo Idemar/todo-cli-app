@@ -77,6 +77,15 @@ fn list_ned(list: &Vec<String>, list_curr: &mut usize) {
         *list_curr += 1;
     }
 }
+
+fn list_transfer(list_dst: &mut Vec<String>, list_src: &mut Vec<String>, list_src_curr: &mut usize) {
+    if *list_src_curr < list_src.len() {
+        list_dst.push(list_src.remove(*list_src_curr));
+        if *list_src_curr >= list_src.len() && list_src.len() > 0 {
+            *list_src_curr = list_src.len() - 1;
+        }
+    }
+}
 fn main() {
     initscr();
     noecho();
@@ -151,21 +160,11 @@ fn main() {
             's' => match fokus {
                     Fokus::Todo => list_ned(&todos, &mut todo_curr),
                     Fokus::Ferdig => list_ned(&dones, &mut done_curr),
-                }
+                },
             '\n' => match fokus {
-                Fokus::Todo => if todo_curr < todos.len() {
-                    dones.push(todos.remove(todo_curr));
-                    if todo_curr >= todos.len() && todos.len() > 0 {
-                        todo_curr = todos.len() - 1;
-                    }
-                }
-                Fokus::Ferdig => if done_curr < dones.len() {
-                    todos.push(dones.remove(done_curr));
-                    if done_curr >= dones.len() && dones.len() > 0 {
-                        done_curr = dones.len() - 1;
-                    }
-                }
-            }
+                Fokus::Todo => list_transfer(&mut dones, &mut todos, &mut todo_curr),
+                Fokus::Ferdig => list_transfer(&mut todos, &mut dones, &mut done_curr),
+            },
             '\t' => {
                 fokus = fokus.bytt();
             }
