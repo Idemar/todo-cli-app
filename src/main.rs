@@ -65,6 +65,18 @@ impl Fokus {
         }
     }
 }
+
+fn list_opp(list_curr: &mut usize) {
+    if *list_curr > 0 {
+        *list_curr -= 1;
+    }
+}
+
+fn list_ned(list: &Vec<String>, list_curr: &mut usize) {
+    if *list_curr + 1 < list.len() {
+        *list_curr += 1;
+    }
+}
 fn main() {
     initscr();
     noecho();
@@ -88,7 +100,7 @@ fn main() {
         "Spis frokost".to_string(),
     ];
 
-    let done_curr: usize = 0;
+    let mut done_curr: usize = 0;
     let mut todo_curr: usize = 0;
     let mut fokus = Fokus::Todo;
 
@@ -101,7 +113,8 @@ fn main() {
         {
             match fokus {
                 Fokus::Todo => {
-                    ui.label("TODO:", REGULAR_PAIR);
+                    ui.label("[TODO] FERDIG ", REGULAR_PAIR);
+                    ui.label("------------- ", REGULAR_PAIR);
                     ui.start_liste(todo_curr);
 
                     for (index, todo) in todos.iter().enumerate() {
@@ -110,7 +123,8 @@ fn main() {
                     ui.slutt_liste();
                 },
                 Fokus::Ferdig => {
-                    ui.label("FERDIG:", REGULAR_PAIR);
+                    ui.label(" TODO [FERDIG]", REGULAR_PAIR);
+                    ui.label(" -------------", REGULAR_PAIR);
                     ui.start_liste(done_curr);
                     for (index, done) in dones.iter().enumerate() {
                      ui.liste_elementer(&format!("- [x] {}",done), index);
@@ -129,16 +143,27 @@ fn main() {
             // q avslutter programmet
             'q' => quit = true,
             // w flytter opp i lista
-            'w' => if todo_curr > 0 {
-                todo_curr -= 1;
-            },
+            'w' => match fokus {
+                    Fokus::Todo => list_opp(&mut todo_curr),
+                    Fokus::Ferdig => list_opp(&mut done_curr),
+                }
             // s flytter ned i lista
-            's' => if todo_curr + 1 < todos.len() {
-                todo_curr += 1;
-            }
-            '\n' => {
-                if todo_curr < todos.len() {
+            's' => match fokus {
+                    Fokus::Todo => list_ned(&todos, &mut todo_curr),
+                    Fokus::Ferdig => list_ned(&dones, &mut done_curr),
+                }
+            '\n' => match fokus {
+                Fokus::Todo => if todo_curr < todos.len() {
                     dones.push(todos.remove(todo_curr));
+                    if todo_curr >= todos.len() && todos.len() > 0 {
+                        todo_curr = todos.len() - 1;
+                    }
+                }
+                Fokus::Ferdig => if done_curr < dones.len() {
+                    todos.push(dones.remove(done_curr));
+                    if done_curr >= dones.len() && dones.len() > 0 {
+                        done_curr = dones.len() - 1;
+                    }
                 }
             }
             '\t' => {

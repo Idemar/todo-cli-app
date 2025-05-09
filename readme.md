@@ -15,3 +15,4 @@ cargo run
 |<kbd>w</kbd>|flytt opp i listen|
 |<kbd>s</kbd>|flytt ned i listen|
 |<kbd>enter</kbd>|flytt todo til fullført (ferdig)|
+|<kbd>tab</kbd>|bytte mellom liste todo og fullført (ferdig)|
