@@ -1,3 +1,5 @@
+use std::fs::File;
+use std::io::Write;
 use ncurses::*;
 
 const REGULAR_PAIR: i16 = 0;
@@ -17,14 +19,16 @@ impl Ui {
         self.row = row;
         self.col = col;
     }
-    
+
     fn start_liste(&mut self, id: Id) {
         assert!(self.list_curr.is_none(), "nestede lister er ikke tillatt");
         self.list_curr = Some(id);
     }
 
     fn liste_elementer(&mut self, label: &str, id: Id) -> bool {
-        let id_curr = self.list_curr.expect("Ikke lov å lager list elemnet utenfor list");
+        let id_curr = self
+            .list_curr
+            .expect("Ikke lov å lager list elemnet utenfor list");
 
         self.label(label, {
             if id_curr == id {
@@ -48,8 +52,7 @@ impl Ui {
         self.list_curr = None;
     }
 
-    fn slutt(&mut self) { 
-    }
+    fn slutt(&mut self) {}
 }
 
 enum Fokus {
@@ -66,6 +69,10 @@ impl Fokus {
     }
 }
 
+fn parse_item(line: &str) -> Option<(Fokus, &str)> {
+    todo!()
+}
+
 fn list_opp(list_curr: &mut usize) {
     if *list_curr > 0 {
         *list_curr -= 1;
@@ -78,14 +85,26 @@ fn list_ned(list: &Vec<String>, list_curr: &mut usize) {
     }
 }
 
-fn list_transfer(list_dst: &mut Vec<String>, list_src: &mut Vec<String>, list_src_curr: &mut usize) {
+fn list_transfer(
+    list_dst: &mut Vec<String>,
+    list_src: &mut Vec<String>,
+    list_src_curr: &mut usize,
+) {
     if *list_src_curr < list_src.len() {
         list_dst.push(list_src.remove(*list_src_curr));
-        if *list_src_curr >= list_src.len() && list_src.len() > 0 {
+        if *list_src_curr >= list_src.len() && !list_src.is_empty() {
             *list_src_curr = list_src.len() - 1;
         }
     }
 }
+
+// TODO(#1) opprettholde programmets tilstand
+// TODO(#2) legge til nye elementer i TODO-en
+// TODO(#3) slette elementer
+// TODO(#4) redigere elementene
+// TODO(#5) holde oversikt over datoen da elementet ble fullført
+// TODO(#6) angre systemet
+
 fn main() {
     initscr();
     noecho();
@@ -98,16 +117,9 @@ fn main() {
     init_pair(HIGHLIGHT_PAIR, COLOR_BLACK, COLOR_WHITE);
 
     let mut quit = false;
-    let mut todos: Vec<String> = vec![
-        "Lag todo app".to_string(),
-        "Drikk en kopp kaffe".to_string(),
-        "Fullfør det du begynte med".to_string(),
-    ];
+    let mut todos = Vec::<String>::new();
+    let mut dones = Vec::<String>::new();
 
-    let mut dones = vec![
-        "Stå opp".to_string(),
-        "Spis frokost".to_string(),
-    ];
 
     let mut done_curr: usize = 0;
     let mut todo_curr: usize = 0;
@@ -127,16 +139,16 @@ fn main() {
                     ui.start_liste(todo_curr);
 
                     for (index, todo) in todos.iter().enumerate() {
-                    ui.liste_elementer(&format!("- [ ] {}",todo), index);
+                        ui.liste_elementer(&format!("- [ ] {}", todo), index);
                     }
                     ui.slutt_liste();
-                },
+                }
                 Fokus::Ferdig => {
                     ui.label(" TODO [FERDIG]", REGULAR_PAIR);
                     ui.label(" -------------", REGULAR_PAIR);
                     ui.start_liste(done_curr);
                     for (index, done) in dones.iter().enumerate() {
-                     ui.liste_elementer(&format!("- [x] {}",done), index);
+                        ui.liste_elementer(&format!("- [x] {}", done), index);
                     }
                     ui.slutt_liste();
                 }
@@ -151,16 +163,27 @@ fn main() {
         match key as u8 as char {
             // q avslutter programmet
             'q' => quit = true,
+
+            'e' => {
+                let mut file = File::create("TODO").unwrap();
+                for todo in todos.iter() {
+                    writeln!(file, "TODO: {}", todo);
+                }
+                for done in dones.iter() {
+                    writeln!(file, "FERDIG: {}", done);
+                }
+            }
+
             // w flytter opp i lista
             'w' => match fokus {
-                    Fokus::Todo => list_opp(&mut todo_curr),
-                    Fokus::Ferdig => list_opp(&mut done_curr),
-                }
+                Fokus::Todo => list_opp(&mut todo_curr),
+                Fokus::Ferdig => list_opp(&mut done_curr),
+            },
             // s flytter ned i lista
             's' => match fokus {
-                    Fokus::Todo => list_ned(&todos, &mut todo_curr),
-                    Fokus::Ferdig => list_ned(&dones, &mut done_curr),
-                },
+                Fokus::Todo => list_ned(&todos, &mut todo_curr),
+                Fokus::Ferdig => list_ned(&dones, &mut done_curr),
+            },
             '\n' => match fokus {
                 Fokus::Todo => list_transfer(&mut dones, &mut todos, &mut todo_curr),
                 Fokus::Ferdig => list_transfer(&mut todos, &mut dones, &mut done_curr),
