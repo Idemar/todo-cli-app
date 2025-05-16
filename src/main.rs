@@ -1,6 +1,8 @@
+use ncurses::*;
+use std::env;
 use std::fs::File;
 use std::io::Write;
-use ncurses::*;
+use std::process;
 
 const REGULAR_PAIR: i16 = 0;
 const HIGHLIGHT_PAIR: i16 = 1;
@@ -106,6 +108,28 @@ fn list_transfer(
 // TODO(#6) angre systemet
 
 fn main() {
+    let mut args = env::args();
+    args.next().unwrap();
+
+    let fil_sti = match args.next() {
+        Some(fil_sti) => fil_sti,
+        None => {
+            eprintln!("Bruk: todo-cl-app <file-path>");
+            eprintln!("FEIL: filsti er ikke oppgitt");
+            process::exit(1);
+        }
+    };
+
+    let mut todos = Vec::<String>::new();
+    let mut dones = Vec::<String>::new();
+
+    let mut done_curr: usize = 0;
+    let mut todo_curr: usize = 0;
+
+    {
+        let fil = File::open(fil_sti).unwrap();
+    }
+
     initscr();
     noecho();
 
@@ -117,12 +141,6 @@ fn main() {
     init_pair(HIGHLIGHT_PAIR, COLOR_BLACK, COLOR_WHITE);
 
     let mut quit = false;
-    let mut todos = Vec::<String>::new();
-    let mut dones = Vec::<String>::new();
-
-
-    let mut done_curr: usize = 0;
-    let mut todo_curr: usize = 0;
     let mut fokus = Fokus::Todo;
 
     let mut ui = Ui::default();
